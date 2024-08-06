@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Note Taking App</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+</head>
+<body>
+  <nav class="navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand">Home</a>
+      <form class="d-flex">
+        <input class="form-control me-2" type="search" id="searchInput" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-success" type="button" id="searchButton">Search</button>
+      </form>
+    </div>
+  </nav>
+
+  <div class="container my-3">
+    <b>Welcome to notes</b>
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Add a Note</h5>
+        <div class="form-floating">
+          <textarea class="form-control" id="addtxt" placeholder="Leave a comment here"></textarea>
+          <label for="addtxt">Note Content</label>
+        </div>
+        <button class="btn btn-primary mt-2" id="addNoteButton">Add</button>
+      </div>
+    </div>
+    <br>
+    <div class="afterthis">
+      <h1>Your notes</h1>
+    </div>
+    <div class="text-center mt-3">
+      <button class="btn btn-primary" id="showAllButton" style="display: none;">Show All Notes</button>
+    </div>
+  </div>
+
+  <script>
+    let noteCount = 0;
+    let notes = [];
+
+    document.getElementById('addNoteButton').addEventListener('click', () => {
+      const content = document.getElementById('addtxt').value.trim();
+      if (content) {
+        noteCount++;
+        const noteId = `note${noteCount}`;
+        const noteElement = document.createElement('div');
+        noteElement.className = 'noteCard my-2 mx-2 card';
+        noteElement.id = noteId;
+        noteElement.innerHTML = `
+          <div class="card-body">
+            ${content}
+            <button class="btn btn-danger float-end mt-2" data-id="${noteId}">Delete Note</button>
+          </div>
+        `;
+        document.querySelector('.afterthis').appendChild(noteElement);
+        notes.push(noteElement);
+        document.getElementById('addtxt').value = '';
+      }
+    });
+
+    document.getElementById('searchButton').addEventListener('click', () => {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      notes.forEach(note => {
+        const content = note.innerText.toLowerCase();
+        if (content.includes(query)) {
+          note.style.display = 'block';
+        } else {
+          note.style.display = 'none';
+        }
+      });
+      document.getElementById('showAllButton').style.display = 'block';
+    });
+
+    document.getElementById('showAllButton').addEventListener('click', () => {
+      notes.forEach(note => note.style.display = 'block');
+      document.getElementById('showAllButton').style.display = 'none';
+    });
+
+    document.querySelector('.afterthis').addEventListener('click', (e) => {
+      if (e.target.tagName === 'BUTTON' && e.target.textContent === 'Delete Note') {
+        const noteId = e.target.dataset.id;
+        const noteElement = document.getElementById(noteId);
+        noteElement.remove();
+        notes = notes.filter(note => note.id !== noteId);
+      }
+    });
+  </script>
+</body>
+</html>
