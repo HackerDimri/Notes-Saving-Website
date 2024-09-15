@@ -26,7 +26,7 @@
           <textarea class="form-control" id="addtxt" placeholder="Leave a comment here"></textarea>
           <label for="addtxt">Note Content</label>
         </div>
-        <button class="btn btn-primary mt-2" id="addNoteButton">Add</button>
+        <button class="btn btn-primary mt-2" id="encryptAndAddButton">Encrypt and Add</button>
       </div>
     </div>
     <br>
@@ -41,23 +41,64 @@
   <script>
     let noteCount = 0;
     let notes = [];
+    const shift = 3;
 
-    document.getElementById('addNoteButton').addEventListener('click', () => {
+    function encrypt(text) {
+      let encryptedText = '';
+      for (let i = 0; i < text.length; i++) {
+        let char = text[i];
+        let code = char.charCodeAt(0);
+
+        if (char >= 'a' && char <= 'z') {
+          let newCode = ((code - 97 + shift) % 26) + 97;
+          encryptedText += String.fromCharCode(newCode);
+        } else if (char >= 'A' && char <= 'Z') {
+          let newCode = ((code - 65 + shift) % 26) + 65;
+          encryptedText += String.fromCharCode(newCode);
+        } else {
+          encryptedText += char;
+        }
+      }
+      return encryptedText;
+    }
+
+    function decrypt(text) {
+      let decryptedText = '';
+      for (let i = 0; i < text.length; i++) {
+        let char = text[i];
+        let code = char.charCodeAt(0);
+
+        if (char >= 'a' && char <= 'z') {
+          let newCode = ((code - 97 - shift + 26) % 26) + 97;
+          decryptedText += String.fromCharCode(newCode);
+        } else if (char >= 'A' && char <= 'Z') {
+          let newCode = ((code - 65 - shift + 26) % 26) + 65;
+          decryptedText += String.fromCharCode(newCode);
+        } else {
+          decryptedText += char;
+        }
+      }
+      return decryptedText;
+    }
+
+    document.getElementById('encryptAndAddButton').addEventListener('click', () => {
       const content = document.getElementById('addtxt').value.trim();
       if (content) {
         noteCount++;
         const noteId = `note${noteCount}`;
+        const encryptedContent = encrypt(content);
         const noteElement = document.createElement('div');
         noteElement.className = 'noteCard my-2 mx-2 card';
         noteElement.id = noteId;
         noteElement.innerHTML = `
           <div class="card-body">
-            ${content}
+            <p class="noteContent">${encryptedContent}</p>
+            <button class="btn btn-warning float-end mt-2 me-2" data-id="${noteId}" data-action="decrypt">Decrypt</button>
             <button class="btn btn-danger float-end mt-2" data-id="${noteId}">Delete Note</button>
           </div>
         `;
         document.querySelector('.afterthis').appendChild(noteElement);
-        notes.push(noteElement);
+        notes.push({ id: noteId, content: encryptedContent, encrypted: true });
         document.getElementById('addtxt').value = '';
       }
     });
@@ -65,29 +106,61 @@
     document.getElementById('searchButton').addEventListener('click', () => {
       const query = document.getElementById('searchInput').value.toLowerCase();
       notes.forEach(note => {
-        const content = note.innerText.toLowerCase();
-        if (content.includes(query)) {
-          note.style.display = 'block';
-        } else {
-          note.style.display = 'none';
-        }
+        const display = note.encrypted
+          ? decrypt(note.content).toLowerCase().includes(query)
+          : note.content.toLowerCase().includes(query);
+
+        document.getElementById(note.id).style.display = display ? 'block' : 'none';
       });
       document.getElementById('showAllButton').style.display = 'block';
     });
 
     document.getElementById('showAllButton').addEventListener('click', () => {
-      notes.forEach(note => note.style.display = 'block');
+      notes.forEach(note => document.getElementById(note.id).style.display = 'block');
       document.getElementById('showAllButton').style.display = 'none';
     });
 
     document.querySelector('.afterthis').addEventListener('click', (e) => {
-      if (e.target.tagName === 'BUTTON' && e.target.textContent === 'Delete Note') {
+      if (e.target.tagName === 'BUTTON') {
         const noteId = e.target.dataset.id;
         const noteElement = document.getElementById(noteId);
-        noteElement.remove();
-        notes = notes.filter(note => note.id !== noteId);
+        const note = notes.find(note => note.id === noteId);
+
+        if (e.target.textContent === 'Delete Note') {
+          noteElement.remove();
+          notes = notes.filter(note => note.id !== noteId);
+        } else if (e.target.dataset.action === 'decrypt') {
+          if (note.encrypted) {
+            const decryptedContent = decrypt(note.content);
+            noteElement.querySelector('.noteContent').textContent = decryptedContent;
+            e.target.textContent = 'Encrypt';
+            e.target.dataset.action = 'encrypt';
+            note.content = decryptedContent;
+            note.encrypted = false;
+          }
+        } else if (e.target.dataset.action === 'encrypt') {
+          if (!note.encrypted) {
+            const encryptedContent = encrypt(note.content);
+            noteElement.querySelector('.noteContent').textContent = encryptedContent;
+            e.target.textContent = 'Decrypt';
+            e.target.dataset.action = 'decrypt';
+            note.content = encryptedContent;
+            note.encrypted = true;
+          }
+        }
       }
     });
   </script>
+  <style>
+    .noteCard {
+      max-width: 100%;
+      overflow: hidden;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .noteContent {
+      overflow-wrap: break-word;
+    }
+  </style>
 </body>
 </html>
