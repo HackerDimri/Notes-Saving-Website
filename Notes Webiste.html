@@ -69,10 +69,10 @@
         let code = char.charCodeAt(0);
 
         if (char >= 'a' && char <= 'z') {
-          let newCode = ((code - 97 - shift + 26) % 26) + 97;
+          let newCode = ((code - 97 - shift ) % 26) + 97;
           decryptedText += String.fromCharCode(newCode);
         } else if (char >= 'A' && char <= 'Z') {
-          let newCode = ((code - 65 - shift + 26) % 26) + 65;
+          let newCode = ((code - 65 - shift ) % 26) + 65;
           decryptedText += String.fromCharCode(newCode);
         } else {
           decryptedText += char;
